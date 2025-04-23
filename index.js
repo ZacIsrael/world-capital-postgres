@@ -1,14 +1,48 @@
 import express from "express";
 import bodyParser from "body-parser";
 
+// pg package allows us to interact with our database in postgreSQL
+import pg from "pg";
+
+// allows us to access our passwords and other sensitive variables from the .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 const app = express();
 const port = 3000;
+
+const db = new pg.Client({
+  user: process.env.PG_USERNAME,
+  host: "localhost",
+  // access the "world" database in postgreSQL
+  database: "world",
+  password: process.env.PG_PASSWORD,
+  port: 5432
+});
+
+// connect to the "world" database
+db.connect();
 
 let quiz = [
   { country: "France", capital: "Paris" },
   { country: "United Kingdom", capital: "London" },
   { country: "United States of America", capital: "New York" },
 ];
+
+// retrieve all of the rows/entries from the "capitals" table in the "world" database
+db.query("SELECT * FROM capitals", (err, res) => {
+  if(err){
+    // an error occured
+    console.error("Error executing query: ", err.stack);
+  } else {
+    // quiz is now the rows from the database instead of the static data from the array above
+    quiz = res.rows;
+  }
+  // close the connection to the database
+  db.end();
+});
+
+
 
 let totalCorrect = 0;
 
